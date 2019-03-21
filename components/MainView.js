@@ -96,10 +96,21 @@ export default class MainView extends React.Component {
               }
             ]}
           >
+            {this.props.health ? (
+              <Image
+                style={styles.imageStyle}
+                source={require("../assets/lungs.png")}
+              />
+            ) : (
+              <Image
+                style={styles.imageStyle}
+                source={require("../assets/no-smoking.png")}
+              />
+            )}
             <Text style={styles.moneyTextStyle}>{this.props.value}</Text>
           </View>
         </View>
-      )
+      );
     }
   }
 }
@@ -146,7 +157,7 @@ const styles = StyleSheet.create({
   dateTextStyle: {
     fontSize: 40,
     textAlign: "center",
-    color: "#B9B6B6"
+    color: "#050505"
   },
   moneyTextStyle: {
     fontSize: 40,
@@ -154,7 +165,7 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   imageStyle: {
-    width: 10,
-    height: 10
+    width: 60,
+    height: 60
   }
 });

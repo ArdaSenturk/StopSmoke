@@ -1,5 +1,13 @@
 import React from "react";
-import { StyleSheet, Text, View, AsyncStorage, DatePickerAndroid, TimePickerAndroid } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  AsyncStorage,
+  DatePickerAndroid,
+  TimePickerAndroid
+} from "react-native";
+import { Constants, Permissions } from "expo";
 import SettingsView from "./components/SettingViews";
 import Button from "./components/Button";
 
@@ -9,18 +17,26 @@ export default class Settings extends React.Component {
   };
 
   state = {
-    relaseDate: '',
+    relaseDate: "",
     cigarettesPerDay: "20",
     cigarettesPerPackage: "20",
     cigarettesFee: "10.0",
     smokePerCigarette: "3",
-    date: '',
+    date: ""
   };
 
   componentWillMount() {
     const d = new Date();
-    const date = `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()} - ${d.getHours()}:${d.getMinutes()}`;
+    const date = `${d.getDate()}.${d.getMonth() +
+      1}.${d.getFullYear()} - ${d.getHours()}:${d.getMinutes()}`;
     this.setState({ date, relaseDate: d.getTime().toString() });
+  }
+
+  async componentDidMount() {
+    let result = await Permissions.askAsync(Permissions.NOTIFICATIONS);
+    if (Constants.isDevice && result.status === "granted") {
+      console.log("Notification permissions granted.");
+    }
   }
 
   render() {
@@ -29,7 +45,7 @@ export default class Settings extends React.Component {
         <Text
           style={{
             fontSize: 20,
-            color: "#707070",
+            color: "#5B9BDB",
             marginTop: 50,
             marginBottom: 20
           }}
@@ -38,26 +54,36 @@ export default class Settings extends React.Component {
         </Text>
         <SettingsView
           date
-          dateChange={async() => {
+          dateChange={async () => {
             try {
-              const {action, year, month, day} = await DatePickerAndroid.open({
-                date: new Date()
-              });
+              const { action, year, month, day } = await DatePickerAndroid.open(
+                {
+                  date: new Date()
+                }
+              );
               if (action !== DatePickerAndroid.dismissedAction) {
                 try {
-                  const {action, hour, minute} = await TimePickerAndroid.open({
-                    is24Hour: true,
-                  });
+                  const { action, hour, minute } = await TimePickerAndroid.open(
+                    {
+                      is24Hour: true
+                    }
+                  );
                   if (action !== TimePickerAndroid.dismissedAction) {
-                    this.setState({ date: `${day}.${month}.${year} - ${hour}:${minute}`})
-                    this.setState({ relaseDate: new Date(year,month,day,hour,minute).getTime().toString() })
+                    this.setState({
+                      date: `${day}.${month}.${year} - ${hour}:${minute}`
+                    });
+                    this.setState({
+                      relaseDate: new Date(year, month, day, hour, minute)
+                        .getTime()
+                        .toString()
+                    });
                   }
-                } catch ({code, message}) {
-                  console.warn('Cannot open time picker', message);
+                } catch ({ code, message }) {
+                  console.warn("Cannot open time picker", message);
                 }
               }
-            } catch ({code, message}) {
-              console.warn('Cannot open date picker', message);
+            } catch ({ code, message }) {
+              console.warn("Cannot open date picker", message);
             }
           }}
           label="Bırakma Tarihi"
@@ -66,7 +92,6 @@ export default class Settings extends React.Component {
           textChangeHandler={relaseDate => this.setState({ relaseDate })}
         />
         <SettingsView
-        
           label="Günde İçilen Sigara Sayısı"
           value={this.state.cigarettesPerDay}
           textChangeHandler={cigarettesPerDay =>
@@ -95,11 +120,23 @@ export default class Settings extends React.Component {
         <Button
           label="Kaydet"
           buttonAction={async () => {
-            await AsyncStorage.setItem('relaseDate', this.state.relaseDate)
-            await AsyncStorage.setItem('cigarettesPerDay', this.state.cigarettesPerDay)
-            await AsyncStorage.setItem('cigarettesPerPackage', this.state.cigarettesPerPackage)
-            await AsyncStorage.setItem('cigarettesFee', this.state.cigarettesFee)
-            await AsyncStorage.setItem('smokePerCigarette', this.state.smokePerCigarette)
+            await AsyncStorage.setItem("relaseDate", this.state.relaseDate);
+            await AsyncStorage.setItem(
+              "cigarettesPerDay",
+              this.state.cigarettesPerDay
+            );
+            await AsyncStorage.setItem(
+              "cigarettesPerPackage",
+              this.state.cigarettesPerPackage
+            );
+            await AsyncStorage.setItem(
+              "cigarettesFee",
+              this.state.cigarettesFee
+            );
+            await AsyncStorage.setItem(
+              "smokePerCigarette",
+              this.state.smokePerCigarette
+            );
             this.props.navigation.navigate("Main");
           }}
         />

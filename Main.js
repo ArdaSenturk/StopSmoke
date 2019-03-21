@@ -1,6 +1,16 @@
 import React from "react";
-import { StyleSheet, Text, View, AsyncStorage, Dimensions, ScrollView } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  AsyncStorage,
+  Dimensions,
+  ScrollView,
+  Switch
+} from "react-native";
+import { Notifications, Permissions, AdMobInterstitial } from "expo";
 import MainView from "./components/MainView";
+import Button from "./components/Button";
 
 const { width } = Dimensions.get("window");
 const now = new Date();
@@ -23,11 +33,18 @@ export default class Main extends React.Component {
     minute: 0,
     nonSmoking: 0,
     health: 0,
-    saveMoney: 0
+    saveMoney: 0,
+    switchValue: false
   };
   componentWillMount() {
-    //this.getSettings()
-    this.calculate(this.state.relaseDate);
+    this.getSettings();
+  }
+
+  async componentDidMount() {
+    AdMobInterstitial.setAdUnitID("ca-app-pub-6612319943575873/7308908291"); // Test ID, Replace with your-admob-unit-id
+    AdMobInterstitial.setTestDeviceID("EMULATOR");
+    await AdMobInterstitial.requestAdAsync();
+    await AdMobInterstitial.showAdAsync();
   }
 
   async getSettings() {
@@ -46,11 +63,22 @@ export default class Main extends React.Component {
       cigarettesFee: parseInt(cigarettesFee),
       smokePerCigarette: parseInt(smokePerCigarette)
     });
+
+    this.calculate(this.state.relaseDate);
   }
 
-  calculate(relaseDate) {
+  async calculate(relaseDate) {
+    //Notification on or off
+    const { status } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
+    if (status !== "granted") {
+      this.setState({ switchValue: false });
+    } else {
+      this.setState({ switchValue: true });
+      this.sendNotification();
+    }
+
     //DateFormatter
-    var difference = now.getTime() - 1552957230000;
+    var difference = now.getTime() - relaseDate;
     var yearDifference = Math.floor(
       difference / 1000 / 60 / 60 / 24 / 7 / 4 / 12
     );
@@ -94,7 +122,11 @@ export default class Main extends React.Component {
       (allYear + allMonth + allWeek + allDay + hoursDifference) *
       0.2
     ).toFixed(0);
-    this.setState({ health });
+    if (health <= 100) {
+      this.setState({ health });
+    } else {
+      this.setState({ health: 100 });
+    }
 
     //Cepte Kalan Para
     const oneHourSaveMoney =
@@ -108,16 +140,23 @@ export default class Main extends React.Component {
     this.setState({ saveMoney });
   }
 
+  toggleSwitch = async value => {
+    this.setState({ switchValue: value });
+    if (!value) {
+      Notifications.dismissAllNotificationsAsync();
+    }
+  };
+
   render() {
-    console.log(this.state.health);
-    console.log(this.state.nonSmoking);
-    console.log(this.state.saveMoney);
     return (
-      <ScrollView contentContainerStyle={{ alignItems: 'center' }} style={styles.container}>
+      <ScrollView
+        contentContainerStyle={{ alignItems: "center" }}
+        style={styles.container}
+      >
         <Text
           style={{
             fontSize: 20,
-            color: "#707070",
+            color: "#5B9BDB",
             marginTop: 50,
             marginBottom: 10
           }}
@@ -138,7 +177,7 @@ export default class Main extends React.Component {
         <Text
           style={{
             fontSize: 20,
-            color: "#707070",
+            color: "#5B9BDB",
             marginTop: 10,
             marginBottom: 10
           }}
@@ -151,12 +190,18 @@ export default class Main extends React.Component {
           viewHeight={80}
           money={this.state.saveMoney}
         />
-        <View style={{ flexDirection: "row", alignItems: 'center', justifyContent: 'center' }}>
-          <View style={{ alignItems: 'center' }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center"
+          }}
+        >
+          <View style={{ alignItems: "center" }}>
             <Text
               style={{
                 fontSize: 20,
-                color: "#707070",
+                color: "#5B9BDB",
                 marginTop: 10,
                 marginBottom: 10
               }}
@@ -164,16 +209,17 @@ export default class Main extends React.Component {
               Sağlık Durumu
             </Text>
             <MainView
+              health
               viewWidth={width - 215}
               viewHeight={160}
               value={`%${this.state.health}`}
             />
           </View>
-          <View style={{ alignItems: 'center' }}>
+          <View style={{ alignItems: "center" }}>
             <Text
               style={{
                 fontSize: 20,
-                color: "#707070",
+                color: "#5B9BDB",
                 marginTop: 10,
                 marginBottom: 10
               }}
@@ -181,14 +227,149 @@ export default class Main extends React.Component {
               İçilmeyen Sigara
             </Text>
             <MainView
-              url={'../assets/no-smoking.png'}
+              url={"../assets/no-smoking.png"}
               viewWidth={width - 215}
               viewHeight={160}
               value={this.state.nonSmoking}
             />
           </View>
         </View>
+        <Button
+          label="Sigara İçtim Tekrar Başla"
+          buttonAction={async () => {
+            await AsyncStorage.setItem("relaseDate", now.toString());
+            await AsyncStorage.setItem(
+              "cigarettesPerDay",
+              this.state.cigarettesPerDay.toString()
+            );
+            await AsyncStorage.setItem(
+              "cigarettesPerPackage",
+              this.state.cigarettesPerPackage.toString()
+            );
+            await AsyncStorage.setItem(
+              "cigarettesFee",
+              this.state.cigarettesFee.toString()
+            );
+            await AsyncStorage.setItem(
+              "smokePerCigarette",
+              this.state.smokePerCigarette.toString()
+            );
+            this.calculate(now);
+            this.props.navigation.navigate("Main");
+          }}
+        />
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center"
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 20,
+              color: "#5B9BDB",
+              margin: 10
+            }}
+          >
+            Bildirim
+          </Text>
+          <Switch
+            onValueChange={this.toggleSwitch}
+            value={this.state.switchValue}
+          />
+        </View>
       </ScrollView>
+    );
+  }
+
+  sendNotification() {
+    //5 Dakika Sonra Notification
+    Notifications.scheduleLocalNotificationAsync(
+      {
+        title: "Tebrikler!",
+        body: "Tebrikler Sigarayı Bırakmaya Karar Verdin."
+      },
+      {
+        time: this.state.relaseDate + 300000
+      }
+    );
+
+    //1 Saat Sonra Notification
+    Notifications.scheduleLocalNotificationAsync(
+      {
+        title: "1 Saattir Sigara İçmedin!",
+        body: "Koskoca 1 saat geçti aradan. Daha yolun başındasın."
+      },
+      {
+        time: this.state.relaseDate + 3600000
+      }
+    );
+
+    //3 Saat Sonra Notification
+    Notifications.scheduleLocalNotificationAsync(
+      {
+        title: "3 Saattir Sigara İçmedin!",
+        body: "Tamı tamına 3 saat geçti. Azmine bayıldım"
+      },
+      {
+        time: this.state.relaseDate + 10800000
+      }
+    );
+
+    //1 Gün Sonra Notification
+    Notifications.scheduleLocalNotificationAsync(
+      {
+        title: "1 Gündür Sigara İçmedin!",
+        body: "Tebrikler Sigarasız 1 Günün Geçti!"
+      },
+      {
+        time: this.state.relaseDate + 86400000
+      }
+    );
+
+    //2 Gün Sonra Notification
+    Notifications.scheduleLocalNotificationAsync(
+      {
+        title: "2 Gündür Sigara İçmedin!",
+        body: "Tebrikler Sigarasız 2. Günün!"
+      },
+      {
+        time: this.state.relaseDate + 172800000
+      }
+    );
+
+    //1 Hafta Sonra Notification
+    Notifications.scheduleLocalNotificationAsync(
+      {
+        title: "1 Haftadır Sigara İçmedin!",
+        body: "Tamı Tamına 1 Haftadır Sigara Kullanmadın!"
+      },
+      {
+        time: this.state.relaseDate + 604800000
+      }
+    );
+
+    //1 Ay Sonra Notification
+    Notifications.scheduleLocalNotificationAsync(
+      {
+        title: "1 Aydır Sigara İçmedin!",
+        body: "Aradan Tanışalı 1 Ay Geçti."
+      },
+      {
+        time: this.state.relaseDate + 2419200000
+      }
+    );
+
+    //2 Ay Sonra Notification
+    Notifications.scheduleLocalNotificationAsync(
+      {
+        title: "2 Aydır Sigara İçmedin!",
+        body: "Aradan Tanışalı 2 Ay Geçti."
+      },
+      {
+        time: this.state.relaseDate + 4838400000
+      }
     );
   }
 }
@@ -196,6 +377,6 @@ export default class Main extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FBFBFB",
+    backgroundColor: "#FBFBFB"
   }
 });
