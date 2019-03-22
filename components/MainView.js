@@ -70,45 +70,41 @@ export default class MainView extends React.Component {
       );
     } else if (this.props.saveMoney) {
       return (
-        <View>
-          <View
-            style={[
-              styles.container,
-              {
-                width: this.props.viewWidth,
-                height: this.props.viewHeight
-              }
-            ]}
-          >
-            <Text style={styles.moneyTextStyle}>{this.props.money} ₺</Text>
-          </View>
+        <View
+          style={[
+            styles.container,
+            {
+              width: this.props.viewWidth,
+              height: this.props.viewHeight
+            }
+          ]}
+        >
+          <Text style={styles.moneyTextStyle}>{this.props.money} ₺</Text>
         </View>
       );
     } else {
       return (
-        <View>
-          <View
-            style={[
-              styles.container,
-              {
-                width: this.props.viewWidth,
-                height: this.props.viewHeight
-              }
-            ]}
-          >
-            {this.props.health ? (
-              <Image
-                style={styles.imageStyle}
-                source={require("../assets/lungs.png")}
-              />
-            ) : (
-              <Image
-                style={styles.imageStyle}
-                source={require("../assets/no-smoking.png")}
-              />
-            )}
-            <Text style={styles.moneyTextStyle}>{this.props.value}</Text>
-          </View>
+        <View
+          style={[
+            styles.container,
+            {
+              width: this.props.viewWidth,
+              height: this.props.viewHeight
+            }
+          ]}
+        >
+          {this.props.health ? (
+            <Image
+              style={styles.imageStyle}
+              source={require("../assets/lungs.png")}
+            />
+          ) : (
+            <Image
+              style={styles.imageStyle}
+              source={require("../assets/no-smoking.png")}
+            />
+          )}
+          <Text style={styles.moneyTextStyle}>{this.props.value}</Text>
         </View>
       );
     }

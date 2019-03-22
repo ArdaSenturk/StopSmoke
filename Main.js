@@ -21,10 +21,10 @@ export default class Main extends React.Component {
   };
   state = {
     relaseDate: 0,
-    cigarettesPerDay: 20,
-    cigarettesPerPackage: 20,
-    cigarettesFee: 10,
-    smokePerCigarette: 20,
+    cigarettesPerDay: 0,
+    cigarettesPerPackage: 0,
+    cigarettesFee: 0,
+    smokePerCigarette: 0,
     year: 0,
     month: 0,
     week: 0,
@@ -41,10 +41,10 @@ export default class Main extends React.Component {
   }
 
   async componentDidMount() {
-    AdMobInterstitial.setAdUnitID("ca-app-pub-6612319943575873/7308908291"); // Test ID, Replace with your-admob-unit-id
-    AdMobInterstitial.setTestDeviceID("EMULATOR");
-    await AdMobInterstitial.requestAdAsync();
-    await AdMobInterstitial.showAdAsync();
+    // AdMobInterstitial.setAdUnitID("ca-app-pub-6612319943575873/7308908291");
+    // AdMobInterstitial.setTestDeviceID("EMULATOR");
+    // await AdMobInterstitial.requestAdAsync();
+    // await AdMobInterstitial.showAdAsync();
   }
 
   async getSettings() {
@@ -64,19 +64,10 @@ export default class Main extends React.Component {
       smokePerCigarette: parseInt(smokePerCigarette)
     });
 
-    this.calculate(this.state.relaseDate);
+    this.calculate(parseInt(relaseDate));
   }
 
   async calculate(relaseDate) {
-    //Notification on or off
-    const { status } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
-    if (status !== "granted") {
-      this.setState({ switchValue: false });
-    } else {
-      this.setState({ switchValue: true });
-      this.sendNotification();
-    }
-
     //DateFormatter
     var difference = now.getTime() - relaseDate;
     var yearDifference = Math.floor(
@@ -138,6 +129,15 @@ export default class Main extends React.Component {
       oneHourSaveMoney
     ).toFixed(1);
     this.setState({ saveMoney });
+
+    //Notification on or off
+    const { status } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
+    if (status !== "granted") {
+      this.setState({ switchValue: false });
+    } else {
+      this.setState({ switchValue: true });
+      this.sendNotification();
+    }
   }
 
   toggleSwitch = async value => {
@@ -194,50 +194,51 @@ export default class Main extends React.Component {
           style={{
             flexDirection: "row",
             alignItems: "center",
+            alignSelf: 'center',
             justifyContent: "center"
           }}
         >
-          <View style={{ alignItems: "center" }}>
-            <Text
-              style={{
-                fontSize: 20,
-                color: "#5B9BDB",
-                marginTop: 10,
-                marginBottom: 10
-              }}
-            >
-              Sağlık Durumu
-            </Text>
-            <MainView
-              health
-              viewWidth={width - 215}
-              viewHeight={160}
-              value={`%${this.state.health}`}
-            />
-          </View>
-          <View style={{ alignItems: "center" }}>
-            <Text
-              style={{
-                fontSize: 20,
-                color: "#5B9BDB",
-                marginTop: 10,
-                marginBottom: 10
-              }}
-            >
-              İçilmeyen Sigara
-            </Text>
-            <MainView
-              url={"../assets/no-smoking.png"}
-              viewWidth={width - 215}
-              viewHeight={160}
-              value={this.state.nonSmoking}
-            />
-          </View>
+            <View style={{ alignItems: "center" }}>
+              <Text
+                style={{
+                  fontSize: 20,
+                  color: "#5B9BDB",
+                  marginTop: 10,
+                  marginBottom: 10
+                }}
+              >
+                Sağlık Durumu
+              </Text>
+              <MainView
+                health
+                viewWidth={width - 230}
+                viewHeight={width - 230}
+                value={`%${this.state.health}`}
+              />
+            </View>
+            <View style={{ alignItems: "center" }}>
+              <Text
+                style={{
+                  fontSize: 20,
+                  color: "#5B9BDB",
+                  marginTop: 10,
+                  marginBottom: 10
+                }}
+              >
+                İçilmeyen Sigara
+              </Text>
+              <MainView
+                url={"../assets/no-smoking.png"}
+                viewWidth={width - 230}
+                viewHeight={width - 230}
+                value={this.state.nonSmoking}
+              />
+            </View>
         </View>
         <Button
-          label="Sigara İçtim Tekrar Başla"
+          label="Sigara İçtim"
           buttonAction={async () => {
-            await AsyncStorage.setItem("relaseDate", now.toString());
+            await AsyncStorage.setItem("relaseDate", now.getTime().toString());
             await AsyncStorage.setItem(
               "cigarettesPerDay",
               this.state.cigarettesPerDay.toString()
@@ -254,7 +255,7 @@ export default class Main extends React.Component {
               "smokePerCigarette",
               this.state.smokePerCigarette.toString()
             );
-            this.calculate(now);
+            this.calculate(now.getTime());
             this.props.navigation.navigate("Main");
           }}
         />

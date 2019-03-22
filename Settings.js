@@ -11,6 +11,8 @@ import { Constants, Permissions } from "expo";
 import SettingsView from "./components/SettingViews";
 import Button from "./components/Button";
 
+const now = new Date();
+
 export default class Settings extends React.Component {
   static navigationOptions = {
     header: null
@@ -26,10 +28,9 @@ export default class Settings extends React.Component {
   };
 
   componentWillMount() {
-    const d = new Date();
-    const date = `${d.getDate()}.${d.getMonth() +
-      1}.${d.getFullYear()} - ${d.getHours()}:${d.getMinutes()}`;
-    this.setState({ date, relaseDate: d.getTime().toString() });
+    const date = `${now.getDate()}.${now.getMonth() +
+      1}.${now.getFullYear()} - ${now.getHours()}:${now.getMinutes()}`;
+    this.setState({ date, relaseDate: now.getTime().toString() });
   }
 
   async componentDidMount() {
@@ -63,7 +64,7 @@ export default class Settings extends React.Component {
               );
               if (action !== DatePickerAndroid.dismissedAction) {
                 try {
-                  const { action, hour, minute } = await TimePickerAndroid.open(
+                  const { action, hour, minute,  } = await TimePickerAndroid.open(
                     {
                       is24Hour: true
                     }
@@ -73,7 +74,7 @@ export default class Settings extends React.Component {
                       date: `${day}.${month}.${year} - ${hour}:${minute}`
                     });
                     this.setState({
-                      relaseDate: new Date(year, month, day, hour, minute)
+                      relaseDate: new Date(year, month, day, hour, minute, now.getSeconds(), now.getMilliseconds())
                         .getTime()
                         .toString()
                     });
