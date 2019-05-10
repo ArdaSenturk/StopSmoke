@@ -45,6 +45,7 @@ export default class Main extends React.Component {
     // AdMobInterstitial.setTestDeviceID("EMULATOR");
     // await AdMobInterstitial.requestAdAsync();
     // await AdMobInterstitial.showAdAsync();
+    Notifications.addListener(this.sendNotification);
   }
 
   async getSettings() {
@@ -285,6 +286,15 @@ export default class Main extends React.Component {
   }
 
   sendNotification() {
+    Notifications.scheduleLocalNotificationAsync(
+      {
+        title: "Tebrikler!",
+        body: "Tebrikler Sigarayı Bırakmaya Karar Verdin."
+      },
+      {
+        time: now.getTime()
+      }
+    );
     //5 Dakika Sonra Notification
     Notifications.scheduleLocalNotificationAsync(
       {
